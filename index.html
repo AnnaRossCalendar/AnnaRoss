@@ -18,121 +18,133 @@ f.addEventListener('load',()=>{
     const d=f.contentDocument;
     const w=f.contentWindow;
     const g=d.querySelector('.grid');
-    if(!g) return;
+    const stage=d.getElementById('stage') || d.querySelector('.stage');
+    const bg=d.querySelector('.stage img.bg, img.bg');
+    if(!g || !stage) return;
 
-    // Keep the exact August alignment that was verified on the iPad.
-    g.style.left='7.71%';
-    g.style.top='33.45%';
-    g.style.width='79.64%';
-    g.style.height='54.75%';
+    // Exact grid alignment verified on the iPad in August.
+    Object.assign(g.style,{left:'7.71%',top:'33.45%',width:'79.64%',height:'54.75%'});
 
     const style=d.createElement('style');
+    style.id='multiMonthStyles';
     style.textContent=`
-      .calendarDynamicTitle{
-        position:absolute;left:28.2%;top:16.4%;width:37.8%;height:14.6%;z-index:3;
-        display:none;align-items:center;justify-content:center;
-        background:#fff;border:0;
-        font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-        color:#315b9f;font-size:clamp(38px,5.7vw,86px);font-weight:500;line-height:1;
-        pointer-events:none;
+      .dynCell{
+        position:relative;display:block;width:100%;height:100%;min-width:0;min-height:0;
+        padding:0;margin:0;background:transparent;border:0;outline:0;cursor:pointer;overflow:visible;
+        font:inherit;color:inherit;
       }
-      .cell.month-dynamic::before{
-        content:"";position:absolute;left:2px;top:2px;width:48px;height:31px;
-        background:#fff;z-index:1;pointer-events:none;
-      }
+      .dynCell::before,.dynCell::after{display:none!important;content:none!important}
       .dayLabel{
-        position:absolute;left:8px;top:5px;z-index:2;
+        position:absolute;left:8px;top:6px;z-index:5;pointer-events:none;
         font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-        font-size:clamp(13px,1.55vw,23px);line-height:1;color:#315b9f;
-        pointer-events:none;
+        font-size:clamp(13px,1.55vw,23px);font-weight:500;line-height:1;color:var(--month-accent,#315b9f);
       }
-      .dayLabel.other{color:#aebed9}
+      .dayLabel.other{opacity:.38}
       .badge{
         left:50%!important;right:auto!important;transform:translateX(-50%)!important;
         bottom:10px!important;max-width:calc(100% - 14px)!important;
       }
+      .dynCell .badge{
+        color:var(--month-accent,#315b9f)!important;
+        border-color:color-mix(in srgb,var(--month-accent,#315b9f) 42%,white)!important;
+        background:color-mix(in srgb,var(--month-soft,#f7f9f5) 92%,white)!important;
+      }
+      .monthTitleCover{
+        position:absolute;left:24.2%;top:15.4%;width:44.5%;height:17.4%;z-index:3;
+        display:none;align-items:center;justify-content:center;box-sizing:border-box;
+        padding:0 2%;border-radius:32px;pointer-events:none;white-space:nowrap;
+        background:linear-gradient(90deg,rgba(255,255,251,.97),var(--month-soft,#f6f8f1),rgba(255,255,251,.97));
+        box-shadow:0 8px 26px rgba(47,75,52,.08);
+        font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
+        color:var(--month-accent,#315b9f);font-size:clamp(34px,4.55vw,70px);font-weight:500;line-height:1;
+      }
+      .monthTitleCover::before,.monthTitleCover::after{
+        content:"❦";font-family:Georgia,serif;font-size:.5em;opacity:.35;margin:0 .35em;color:var(--month-accent,#315b9f);
+      }
       .monthActiveRing{
-        position:absolute;right:1.55%;width:6.45%;height:6.65%;z-index:3;
-        border:2px solid rgba(49,91,159,.75);border-radius:10px;pointer-events:none;
-        box-shadow:0 0 0 2px rgba(255,255,255,.75) inset;
+        position:absolute;right:1.55%;width:6.45%;height:6.65%;z-index:6;
+        border:2px solid var(--month-accent,#315b9f);border-radius:11px;pointer-events:none;
+        box-shadow:0 0 0 2px rgba(255,255,255,.82) inset;
       }
-      .augWash{
+      .monthRailWash{
         position:absolute;right:1.55%;top:13.55%;width:6.45%;height:6.65%;z-index:2;
-        background:rgba(255,255,255,.78);border-radius:10px;display:none;pointer-events:none;
+        background:rgba(255,255,255,.70);border-radius:10px;display:none;pointer-events:none;
       }
+      .gardenVine{
+        position:absolute;left:25.7%;top:29.5%;width:41.2%;height:1px;z-index:4;display:none;pointer-events:none;
+        background:linear-gradient(90deg,transparent,var(--month-accent,#647b55),transparent);opacity:.22;
+      }
+      .gardenVine::before{content:"❧  ·  ❦  ·  ❧";position:absolute;left:50%;top:-13px;transform:translateX(-50%);white-space:nowrap;
+        color:var(--month-accent,#647b55);font-family:Georgia,serif;font-size:18px;background:var(--month-soft,#f5f7ef);padding:0 10px}
     `;
     d.head.appendChild(style);
 
-    const stage=d.getElementById('stage') || d.querySelector('.stage');
-    const title=d.createElement('div');
-    title.className='calendarDynamicTitle';
-    stage.appendChild(title);
-
-    const ring=d.createElement('div');
-    ring.className='monthActiveRing';
-    stage.appendChild(ring);
-    const augWash=d.createElement('div');
-    augWash.className='augWash';
-    stage.appendChild(augWash);
+    const title=d.createElement('div'); title.className='monthTitleCover'; stage.appendChild(title);
+    const ring=d.createElement('div'); ring.className='monthActiveRing'; stage.appendChild(ring);
+    const railWash=d.createElement('div'); railWash.className='monthRailWash'; stage.appendChild(railWash);
+    const vine=d.createElement('div'); vine.className='gardenVine'; stage.appendChild(vine);
 
     const tabTops={7:13.55,8:19.8,9:26.1,10:32.4,11:38.8,0:45.0,1:51.2,2:57.5,3:63.8,4:70.1,5:76.4,6:82.8};
+    const themes={
+      7:{accent:'#315b9f',soft:'#f5f7fb',filter:'none'},
+      8:{accent:'#647b55',soft:'#f2f5e9',filter:'hue-rotate(252deg) saturate(.62) brightness(1.04)'},
+      9:{accent:'#93633f',soft:'#faf2e8',filter:'hue-rotate(150deg) saturate(.66) brightness(1.03)'},
+      10:{accent:'#7b624d',soft:'#f7f0e9',filter:'hue-rotate(155deg) saturate(.48) brightness(1.02)'},
+      11:{accent:'#5b786d',soft:'#edf5f2',filter:'hue-rotate(245deg) saturate(.50) brightness(1.03)'},
+      0:{accent:'#58739b',soft:'#eff4fa',filter:'none'},
+      1:{accent:'#9a6577',soft:'#fbf1f4',filter:'hue-rotate(62deg) saturate(.55) brightness(1.04)'},
+      2:{accent:'#6d8360',soft:'#f1f6ec',filter:'hue-rotate(252deg) saturate(.55) brightness(1.04)'},
+      3:{accent:'#7e6a9b',soft:'#f5f1fa',filter:'hue-rotate(42deg) saturate(.50) brightness(1.04)'},
+      4:{accent:'#6f8a69',soft:'#f0f6ed',filter:'hue-rotate(250deg) saturate(.52) brightness(1.04)'},
+      5:{accent:'#477c7d',soft:'#ecf6f5',filter:'hue-rotate(220deg) saturate(.52) brightness(1.04)'},
+      6:{accent:'#416b91',soft:'#eef5fa',filter:'none'}
+    };
     let viewYear=2026, viewMonth=7;
 
-    const readState=()=>{
-      try{return JSON.parse(w.localStorage.getItem('annaRossPlanner_v1')||'{"events":{}}')}
-      catch(e){return {events:{}}}
-    };
     const pad=n=>String(n).padStart(2,'0');
     const monthName=(y,m)=>new Date(y,m,1).toLocaleDateString(undefined,{month:'long'});
     const keyFor=(y,m,day)=>`${y}-${pad(m+1)}-${pad(day)}`;
+    const readState=()=>{try{return JSON.parse(w.localStorage.getItem('annaRossPlanner_v1')||'{"events":{}}')}catch(e){return {events:{}}}};
 
-    function polishBadges(){
-      d.querySelectorAll('.badge').forEach(b=>{
-        b.style.left='50%';b.style.right='auto';b.style.transform='translateX(-50%)';
-        b.style.bottom='10px';b.style.maxWidth='calc(100% - 14px)';
-      });
+    function setTheme(){
+      const isAug=viewYear===2026&&viewMonth===7;
+      const t=themes[viewMonth]||themes[7];
+      stage.style.setProperty('--month-accent',t.accent);
+      stage.style.setProperty('--month-soft',t.soft);
+      if(bg) bg.style.filter=isAug?'none':t.filter;
+      title.style.display=isAug?'none':'flex';
+      railWash.style.display=isAug?'none':'block';
+      vine.style.display=(viewMonth===8)?'block':'none';
+      if(!isAug) title.childNodes.length;
+      title.textContent=isAug?'':`${monthName(viewYear,viewMonth)} ${viewYear}`;
+      ring.style.top=(tabTops[viewMonth]??13.55)+'%';
+      ring.style.borderColor=t.accent;
     }
 
-    function updateChrome(){
-      const isAug=viewYear===2026 && viewMonth===7;
-      if(isAug){
-        title.style.display='none';
-        augWash.style.display='none';
-      }else{
-        title.textContent=`${monthName(viewYear,viewMonth)} ${viewYear}`;
-        title.style.display='flex';
-        augWash.style.display='block';
-      }
-      ring.style.top=(tabTops[viewMonth] ?? 13.55)+'%';
+    function polishBadges(){
+      d.querySelectorAll('.badge').forEach(b=>Object.assign(b.style,{left:'50%',right:'auto',transform:'translateX(-50%)',bottom:'10px',maxWidth:'calc(100% - 14px)'}));
     }
 
     function buildMonth(){
-      updateChrome();
+      setTheme();
       g.innerHTML='';
       const S=readState();
       const first=new Date(viewYear,viewMonth,1).getDay();
       const days=new Date(viewYear,viewMonth+1,0).getDate();
       const prevDays=new Date(viewYear,viewMonth,0).getDate();
-      const dynamic=!(viewYear===2026 && viewMonth===7);
+      const isAug=viewYear===2026&&viewMonth===7;
 
       for(let i=0;i<42;i++){
-        const b=d.createElement('button');
-        b.className='cell'+(dynamic?' month-dynamic':'');
-        b.type='button';
         const day=i-first+1;
-        let cy=viewYear, cm=viewMonth, cd=day, other=false;
-        if(day<1){
-          other=true; cm=viewMonth-1; cy=viewYear;
-          if(cm<0){cm=11;cy--}
-          cd=prevDays+day;
-        }else if(day>days){
-          other=true; cm=viewMonth+1; cy=viewYear;
-          if(cm>11){cm=0;cy++}
-          cd=day-days;
-        }
+        let cy=viewYear,cm=viewMonth,cd=day,other=false;
+        if(day<1){other=true;cm--;if(cm<0){cm=11;cy--}cd=prevDays+day}
+        else if(day>days){other=true;cm++;if(cm>11){cm=0;cy++}cd=day-days}
         const k=keyFor(cy,cm,cd);
+        const b=d.createElement('button');
+        b.type='button';
+        b.className=isAug?'cell':'dynCell';
 
-        if(dynamic){
+        if(!isAug){
           const lab=d.createElement('span');
           lab.className='dayLabel'+(other?' other':'');
           lab.textContent=cd;
@@ -141,65 +153,51 @@ f.addEventListener('load',()=>{
 
         if(!other){
           const evs=(S.events&&S.events[k])||[];
-          if(evs.length){
-            const s=d.createElement('div');
-            s.className='badge';
-            s.textContent=evs[0].text+(evs.length>1?' +'+(evs.length-1):'');
-            b.appendChild(s);
-          }
+          if(evs.length){const s=d.createElement('div');s.className='badge';s.textContent=evs[0].text+(evs.length>1?' +'+(evs.length-1):'');b.appendChild(s)}
           b.onclick=()=>w.openDate(k);
           b.setAttribute('aria-label',`${monthName(viewYear,viewMonth)} ${cd}, ${viewYear}`);
         }else{
-          b.onclick=()=>{
-            viewYear=cy;viewMonth=cm;buildMonth();
-          };
+          b.onclick=()=>{viewYear=cy;viewMonth=cm;buildMonth()};
         }
         g.appendChild(b);
       }
       setTimeout(polishBadges,0);
     }
 
-    // Replace August-only grid builder so add/delete/check actions refresh the current month.
+    // Expose the new builder so save/delete/check actions refresh the month being viewed.
     w.buildGrid=buildMonth;
 
-    // Make all 12 visible month tabs real and editable: Aug 2026 through Jul 2027.
+    // Aug 2026 through Jul 2027 — every visible month tab is now a real calendar.
     d.querySelectorAll('[data-month]').forEach(b=>{
-      b.onclick=()=>{
+      b.onclick=(e)=>{
+        e.preventDefault();e.stopPropagation();
         const m=Number(b.dataset.month);
-        viewMonth=m;
-        viewYear=(m>=7?2026:2027);
+        viewMonth=m;viewYear=(m>=7?2026:2027);
         d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-        const ov=d.getElementById('overlay'); if(ov) ov.classList.remove('show');
+        const ov=d.getElementById('overlay');if(ov)ov.classList.remove('show');
         buildMonth();
       };
     });
 
-    // Today follows the actual date when it falls within the planner cycle.
+    // Make any legacy month hotspots follow their class name if data-month is absent.
+    const monthClasses=[['.aug',7],['.sep',8],['.oct',9],['.nov',10],['.dec',11],['.jan',0],['.feb',1],['.mar',2],['.apr',3],['.may',4],['.jun',5],['.jul',6]];
+    monthClasses.forEach(([sel,m])=>d.querySelectorAll(sel).forEach(b=>{
+      b.onclick=(e)=>{e.preventDefault();e.stopPropagation();viewMonth=m;viewYear=(m>=7?2026:2027);buildMonth()};
+    }));
+
     w.renderToday=()=>{
-      const now=new Date();
-      let y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
-      const inCycle=(y===2026&&m>=7)||(y===2027&&m<=6);
-      if(!inCycle){y=viewYear;m=viewMonth;day=1}
-      const k=keyFor(y,m,day),box=d.getElementById('todayList'),S=readState();
-      box.innerHTML='';
-      (S.events[k]||[]).forEach(e=>{const x=d.createElement('div');x.className='item';x.textContent=e.type+': '+e.text;box.appendChild(x)});
+      const now=new Date();let y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
+      const inCycle=(y===2026&&m>=7)||(y===2027&&m<=6);if(!inCycle){y=viewYear;m=viewMonth;day=1}
+      const k=keyFor(y,m,day),box=d.getElementById('todayList'),S=readState();if(!box)return;
+      box.innerHTML='';(S.events[k]||[]).forEach(e=>{const x=d.createElement('div');x.className='item';x.textContent=e.type+': '+e.text;box.appendChild(x)});
       if(!(S.events[k]||[]).length)box.textContent='Nothing added yet.';
       const p=d.getElementById('priorities');if(p)p.value=S.priorities||'';
     };
 
-    // Week panel uses the week containing the 14th of the month currently being viewed.
     w.renderWeek=()=>{
-      const S=readState(),out=d.getElementById('weekGrid');out.innerHTML='';
-      const anchor=Math.min(14,new Date(viewYear,viewMonth+1,0).getDate());
-      const dt=new Date(viewYear,viewMonth,anchor);dt.setDate(dt.getDate()-dt.getDay());
-      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach((name,idx)=>{
-        const cur=new Date(dt);cur.setDate(dt.getDate()+idx);
-        const box=d.createElement('div');box.className='weekday';
-        const h=d.createElement('h3');h.textContent=name+' '+cur.getDate();box.appendChild(h);
-        const k=keyFor(cur.getFullYear(),cur.getMonth(),cur.getDate());
-        (S.events[k]||[]).forEach(e=>{const p=d.createElement('div');p.textContent='• '+e.text;box.appendChild(p)});
-        out.appendChild(box);
-      });
+      const S=readState(),out=d.getElementById('weekGrid');if(!out)return;out.innerHTML='';
+      const anchor=Math.min(14,new Date(viewYear,viewMonth+1,0).getDate());const dt=new Date(viewYear,viewMonth,anchor);dt.setDate(dt.getDate()-dt.getDay());
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach((name,idx)=>{const cur=new Date(dt);cur.setDate(dt.getDate()+idx);const box=d.createElement('div');box.className='weekday';const h=d.createElement('h3');h.textContent=name+' '+cur.getDate();box.appendChild(h);const k=keyFor(cur.getFullYear(),cur.getMonth(),cur.getDate());(S.events[k]||[]).forEach(e=>{const p=d.createElement('div');p.textContent='• '+e.text;box.appendChild(p)});out.appendChild(box)});
     };
 
     buildMonth();
