@@ -18,135 +18,191 @@ f.addEventListener('load',()=>{
     const d=f.contentDocument;
     const w=f.contentWindow;
     const g=d.querySelector('.grid');
-    if(g){
-      g.style.left='7.71%';
-      g.style.top='33.45%';
-      g.style.width='79.64%';
-      g.style.height='54.75%';
-    }
+    if(!g) return;
 
-    const polishBadges=()=>d.querySelectorAll('.badge').forEach(b=>{
-      b.style.left='50%';
-      b.style.right='auto';
-      b.style.transform='translateX(-50%)';
-      b.style.bottom='10px';
-      b.style.maxWidth='calc(100% - 14px)';
-    });
-    polishBadges();
+    // Keep the exact August alignment that was verified on the iPad.
+    g.style.left='7.71%';
+    g.style.top='33.45%';
+    g.style.width='79.64%';
+    g.style.height='54.75%';
 
     const style=d.createElement('style');
     style.textContent=`
-      .monthViewTitle{
-        position:absolute;left:7.71%;top:13.2%;width:79.64%;height:11.5%;z-index:5;
-        display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.96);
-        border-radius:16px;font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-        color:#5e80b8;font-size:clamp(26px,3.8vw,54px);font-weight:500;letter-spacing:.02em;
+      .calendarDynamicTitle{
+        position:absolute;left:28.2%;top:16.4%;width:37.8%;height:14.6%;z-index:3;
+        display:none;align-items:center;justify-content:center;
+        background:#fff;border:0;
+        font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
+        color:#315b9f;font-size:clamp(38px,5.7vw,86px);font-weight:500;line-height:1;
+        pointer-events:none;
       }
-      .monthViewGrid{
-        position:absolute;left:7.71%;top:33.45%;width:79.64%;height:54.75%;z-index:4;
-        display:none;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(6,1fr);
-        background:rgba(255,255,255,.96);border-left:1px solid rgba(109,143,198,.28);
-        border-top:1px solid rgba(109,143,198,.28);
+      .cell.month-dynamic::before{
+        content:"";position:absolute;left:2px;top:2px;width:48px;height:31px;
+        background:#fff;z-index:1;pointer-events:none;
       }
-      .monthViewCell{
-        position:relative;border:0;border-right:1px solid rgba(109,143,198,.28);
-        border-bottom:1px solid rgba(109,143,198,.28);background:rgba(255,255,255,.92);
-        cursor:pointer;padding:6px;color:#456694;text-align:left;font:inherit;
+      .dayLabel{
+        position:absolute;left:8px;top:5px;z-index:2;
+        font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
+        font-size:clamp(13px,1.55vw,23px);line-height:1;color:#315b9f;
+        pointer-events:none;
       }
-      .monthViewCell:active{background:rgba(109,143,198,.08)}
-      .monthViewCell.blank{cursor:default;background:rgba(248,251,255,.86)}
-      .monthViewDay{
-        position:absolute;top:5px;left:7px;font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-        color:#5e80b8;font-size:clamp(11px,1.45vw,20px);
+      .dayLabel.other{color:#aebed9}
+      .badge{
+        left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+        bottom:10px!important;max-width:calc(100% - 14px)!important;
       }
-      .monthViewBadge{
-        position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);width:calc(100% - 14px);
-        background:rgba(248,251,255,.97);border:1px solid rgba(109,143,198,.45);border-radius:8px;
-        padding:5px 7px;color:#456694;font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-        font-size:clamp(9px,1.1vw,16px);line-height:1.15;text-align:center;white-space:nowrap;
-        overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;
+      .monthActiveRing{
+        position:absolute;right:1.55%;width:6.45%;height:6.65%;z-index:3;
+        border:2px solid rgba(49,91,159,.75);border-radius:10px;pointer-events:none;
+        box-shadow:0 0 0 2px rgba(255,255,255,.75) inset;
       }
-      @media(max-width:800px){
-        .monthViewTitle{left:7.71%;width:79.64%}
+      .augWash{
+        position:absolute;right:1.55%;top:13.55%;width:6.45%;height:6.65%;z-index:2;
+        background:rgba(255,255,255,.78);border-radius:10px;display:none;pointer-events:none;
       }
     `;
     d.head.appendChild(style);
 
-    const stage=d.getElementById('stage');
+    const stage=d.getElementById('stage') || d.querySelector('.stage');
     const title=d.createElement('div');
-    title.className='monthViewTitle';
-    title.textContent='September 2026';
+    title.className='calendarDynamicTitle';
     stage.appendChild(title);
 
-    const sepGrid=d.createElement('div');
-    sepGrid.className='monthViewGrid';
-    sepGrid.setAttribute('aria-label','September 2026 calendar');
-    stage.appendChild(sepGrid);
+    const ring=d.createElement('div');
+    ring.className='monthActiveRing';
+    stage.appendChild(ring);
+    const augWash=d.createElement('div');
+    augWash.className='augWash';
+    stage.appendChild(augWash);
 
-    let mode='august';
+    const tabTops={7:13.55,8:19.8,9:26.1,10:32.4,11:38.8,0:45.0,1:51.2,2:57.5,3:63.8,4:70.1,5:76.4,6:82.8};
+    let viewYear=2026, viewMonth=7;
+
     const readState=()=>{
-      try{return JSON.parse(w.localStorage.getItem('annaRossPlanner_v1')||'{"events":{}}')}catch(e){return {events:{}}}
+      try{return JSON.parse(w.localStorage.getItem('annaRossPlanner_v1')||'{"events":{}}')}
+      catch(e){return {events:{}}}
+    };
+    const pad=n=>String(n).padStart(2,'0');
+    const monthName=(y,m)=>new Date(y,m,1).toLocaleDateString(undefined,{month:'long'});
+    const keyFor=(y,m,day)=>`${y}-${pad(m+1)}-${pad(day)}`;
+
+    function polishBadges(){
+      d.querySelectorAll('.badge').forEach(b=>{
+        b.style.left='50%';b.style.right='auto';b.style.transform='translateX(-50%)';
+        b.style.bottom='10px';b.style.maxWidth='calc(100% - 14px)';
+      });
+    }
+
+    function updateChrome(){
+      const isAug=viewYear===2026 && viewMonth===7;
+      if(isAug){
+        title.style.display='none';
+        augWash.style.display='none';
+      }else{
+        title.textContent=`${monthName(viewYear,viewMonth)} ${viewYear}`;
+        title.style.display='flex';
+        augWash.style.display='block';
+      }
+      ring.style.top=(tabTops[viewMonth] ?? 13.55)+'%';
+    }
+
+    function buildMonth(){
+      updateChrome();
+      g.innerHTML='';
+      const S=readState();
+      const first=new Date(viewYear,viewMonth,1).getDay();
+      const days=new Date(viewYear,viewMonth+1,0).getDate();
+      const prevDays=new Date(viewYear,viewMonth,0).getDate();
+      const dynamic=!(viewYear===2026 && viewMonth===7);
+
+      for(let i=0;i<42;i++){
+        const b=d.createElement('button');
+        b.className='cell'+(dynamic?' month-dynamic':'');
+        b.type='button';
+        const day=i-first+1;
+        let cy=viewYear, cm=viewMonth, cd=day, other=false;
+        if(day<1){
+          other=true; cm=viewMonth-1; cy=viewYear;
+          if(cm<0){cm=11;cy--}
+          cd=prevDays+day;
+        }else if(day>days){
+          other=true; cm=viewMonth+1; cy=viewYear;
+          if(cm>11){cm=0;cy++}
+          cd=day-days;
+        }
+        const k=keyFor(cy,cm,cd);
+
+        if(dynamic){
+          const lab=d.createElement('span');
+          lab.className='dayLabel'+(other?' other':'');
+          lab.textContent=cd;
+          b.appendChild(lab);
+        }
+
+        if(!other){
+          const evs=(S.events&&S.events[k])||[];
+          if(evs.length){
+            const s=d.createElement('div');
+            s.className='badge';
+            s.textContent=evs[0].text+(evs.length>1?' +'+(evs.length-1):'');
+            b.appendChild(s);
+          }
+          b.onclick=()=>w.openDate(k);
+          b.setAttribute('aria-label',`${monthName(viewYear,viewMonth)} ${cd}, ${viewYear}`);
+        }else{
+          b.onclick=()=>{
+            viewYear=cy;viewMonth=cm;buildMonth();
+          };
+        }
+        g.appendChild(b);
+      }
+      setTimeout(polishBadges,0);
+    }
+
+    // Replace August-only grid builder so add/delete/check actions refresh the current month.
+    w.buildGrid=buildMonth;
+
+    // Make all 12 visible month tabs real and editable: Aug 2026 through Jul 2027.
+    d.querySelectorAll('[data-month]').forEach(b=>{
+      b.onclick=()=>{
+        const m=Number(b.dataset.month);
+        viewMonth=m;
+        viewYear=(m>=7?2026:2027);
+        d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+        const ov=d.getElementById('overlay'); if(ov) ov.classList.remove('show');
+        buildMonth();
+      };
+    });
+
+    // Today follows the actual date when it falls within the planner cycle.
+    w.renderToday=()=>{
+      const now=new Date();
+      let y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
+      const inCycle=(y===2026&&m>=7)||(y===2027&&m<=6);
+      if(!inCycle){y=viewYear;m=viewMonth;day=1}
+      const k=keyFor(y,m,day),box=d.getElementById('todayList'),S=readState();
+      box.innerHTML='';
+      (S.events[k]||[]).forEach(e=>{const x=d.createElement('div');x.className='item';x.textContent=e.type+': '+e.text;box.appendChild(x)});
+      if(!(S.events[k]||[]).length)box.textContent='Nothing added yet.';
+      const p=d.getElementById('priorities');if(p)p.value=S.priorities||'';
     };
 
-    function renderSeptember(){
-      mode='september';
-      d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-      if(g)g.style.visibility='hidden';
-      title.style.display='flex';
-      sepGrid.style.display='grid';
-      sepGrid.innerHTML='';
+    // Week panel uses the week containing the 14th of the month currently being viewed.
+    w.renderWeek=()=>{
+      const S=readState(),out=d.getElementById('weekGrid');out.innerHTML='';
+      const anchor=Math.min(14,new Date(viewYear,viewMonth+1,0).getDate());
+      const dt=new Date(viewYear,viewMonth,anchor);dt.setDate(dt.getDate()-dt.getDay());
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach((name,idx)=>{
+        const cur=new Date(dt);cur.setDate(dt.getDate()+idx);
+        const box=d.createElement('div');box.className='weekday';
+        const h=d.createElement('h3');h.textContent=name+' '+cur.getDate();box.appendChild(h);
+        const k=keyFor(cur.getFullYear(),cur.getMonth(),cur.getDate());
+        (S.events[k]||[]).forEach(e=>{const p=d.createElement('div');p.textContent='• '+e.text;box.appendChild(p)});
+        out.appendChild(box);
+      });
+    };
 
-      const first=2; // Tuesday, September 1, 2026 on a Sunday-first calendar.
-      const days=30;
-      const S=readState();
-      for(let i=0;i<42;i++){
-        const cell=d.createElement('button');
-        cell.type='button';
-        cell.className='monthViewCell';
-        const day=i-first+1;
-        if(day<1||day>days){
-          cell.classList.add('blank');
-          cell.disabled=true;
-        }else{
-          const key='2026-09-'+String(day).padStart(2,'0');
-          const n=d.createElement('span');
-          n.className='monthViewDay';
-          n.textContent=day;
-          cell.appendChild(n);
-          const evs=(S.events&&S.events[key])||[];
-          if(evs.length){
-            const badge=d.createElement('div');
-            badge.className='monthViewBadge';
-            badge.textContent=evs[0].text+(evs.length>1?' +'+(evs.length-1):'');
-            cell.appendChild(badge);
-          }
-          cell.setAttribute('aria-label','September '+day+', 2026');
-          cell.onclick=()=>w.openDate(key);
-        }
-        sepGrid.appendChild(cell);
-      }
-    }
-
-    function showAugust(){
-      mode='august';
-      title.style.display='none';
-      sepGrid.style.display='none';
-      if(g)g.style.visibility='visible';
-      if(typeof w.buildGrid==='function')w.buildGrid();
-      setTimeout(polishBadges,0);
-      d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-    }
-
-    const aug=d.querySelector('[data-month="7"]');
-    const sep=d.querySelector('[data-month="8"]');
-    if(aug)aug.onclick=showAugust;
-    if(sep)sep.onclick=renderSeptember;
-
-    const refreshSeptember=()=>setTimeout(()=>{if(mode==='september')renderSeptember();},0);
-    const saveEvent=d.getElementById('saveEvent');
-    const overlay=d.getElementById('overlay');
-    if(saveEvent)saveEvent.addEventListener('click',refreshSeptember);
-    if(overlay)overlay.addEventListener('click',refreshSeptember);
+    buildMonth();
   }catch(e){console.error(e)}
 });
 </script>
