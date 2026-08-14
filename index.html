@@ -43,14 +43,24 @@ html,body{margin:0;min-height:100%;background:#eef2f7;color:#35567c;font-family:
 .cell{position:relative;border:0;background:transparent;cursor:pointer;padding:0}
 .cell:active{background:rgba(109,143,198,.08)}
 .badge{
-  position:absolute;left:7px;right:7px;bottom:7px;
-  background:rgba(248,251,255,.94);
-  border:1px solid rgba(109,143,198,.35);
-  border-left:3px solid #6d8fc6;
-  border-radius:8px;padding:4px 6px;
+  position:absolute;
+  left:8px;
+  right:8px;
+  top:56%;
+  transform:translateY(-50%);
+  background:rgba(248,251,255,.96);
+  border:1px solid rgba(109,143,198,.45);
+  border-radius:8px;
+  padding:5px 7px;
   font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-  color:#456694;font-size:clamp(9px,1.1vw,16px);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#456694;
+  font-size:clamp(9px,1.1vw,16px);
+  line-height:1.15;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  box-sizing:border-box;
 }
 .overlay{position:absolute;inset:0;background:rgba(248,251,255,.50);backdrop-filter:blur(2px);z-index:10;display:none;align-items:center;justify-content:center;padding:18px}
 .overlay.show{display:flex}
