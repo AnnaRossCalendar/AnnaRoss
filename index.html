@@ -14,194 +14,191 @@ iframe{display:block;width:100%;height:100vh;border:0;background:#fff}
 <script>
 const f=document.getElementById('cal');
 f.addEventListener('load',()=>{
-  try{
-    const d=f.contentDocument;
-    const w=f.contentWindow;
-    const g=d.querySelector('.grid');
-    const stage=d.getElementById('stage') || d.querySelector('.stage');
-    const bg=d.querySelector('.stage img.bg, img.bg');
-    if(!g || !stage) return;
+ try{
+  const d=f.contentDocument,w=f.contentWindow;
+  const g=d.querySelector('.grid');
+  const stage=d.getElementById('stage')||d.querySelector('.stage');
+  const bg=d.querySelector('.stage img.bg')||d.querySelector('img.bg')||stage?.querySelector('img');
+  if(!g||!stage)return;
 
-    // Exact grid alignment verified on the iPad in August.
-    Object.assign(g.style,{left:'7.71%',top:'33.45%',width:'79.64%',height:'54.75%'});
+  // Alignment verified on iPad against the printed August grid.
+  Object.assign(g.style,{left:'7.71%',top:'33.45%',width:'79.64%',height:'54.75%'});
 
-    const style=d.createElement('style');
-    style.id='multiMonthStyles';
-    style.textContent=`
-      .dynCell{
-        position:relative;display:block;width:100%;height:100%;min-width:0;min-height:0;
-        padding:0;margin:0;background:transparent;border:0;outline:0;cursor:pointer;overflow:visible;
-        font:inherit;color:inherit;
-      }
-      .dynCell::before,.dynCell::after{display:none!important;content:none!important}
-      .dayLabel{
-        position:absolute;left:8px;top:6px;z-index:5;pointer-events:none;
-        font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-        font-size:clamp(13px,1.55vw,23px);font-weight:500;line-height:1;color:var(--month-accent,#315b9f);
-      }
-      .dayLabel.other{opacity:.38}
-      .badge{
-        left:50%!important;right:auto!important;transform:translateX(-50%)!important;
-        bottom:10px!important;max-width:calc(100% - 14px)!important;
-      }
-      .dynCell .badge{
-        color:var(--month-accent,#315b9f)!important;
-        border-color:color-mix(in srgb,var(--month-accent,#315b9f) 42%,white)!important;
-        background:color-mix(in srgb,var(--month-soft,#f7f9f5) 92%,white)!important;
-      }
-      .monthTitleCover{
-        position:absolute;left:24.2%;top:15.4%;width:44.5%;height:17.4%;z-index:3;
-        display:none;align-items:center;justify-content:center;box-sizing:border-box;
-        padding:0 2%;border-radius:32px;pointer-events:none;white-space:nowrap;
-        background:linear-gradient(90deg,rgba(255,255,251,.97),var(--month-soft,#f6f8f1),rgba(255,255,251,.97));
-        box-shadow:0 8px 26px rgba(47,75,52,.08);
-        font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
-        color:var(--month-accent,#315b9f);font-size:clamp(34px,4.55vw,70px);font-weight:500;line-height:1;
-      }
-      .monthTitleCover::before,.monthTitleCover::after{
-        content:"❦";font-family:Georgia,serif;font-size:.5em;opacity:.35;margin:0 .35em;color:var(--month-accent,#315b9f);
-      }
-      .monthActiveRing{
-        position:absolute;right:1.55%;width:6.45%;height:6.65%;z-index:6;
-        border:2px solid var(--month-accent,#315b9f);border-radius:11px;pointer-events:none;
-        box-shadow:0 0 0 2px rgba(255,255,255,.82) inset;
-      }
-      .monthRailWash{
-        position:absolute;right:1.55%;top:13.55%;width:6.45%;height:6.65%;z-index:2;
-        background:rgba(255,255,255,.70);border-radius:10px;display:none;pointer-events:none;
-      }
-      .gardenVine{
-        position:absolute;left:25.7%;top:29.5%;width:41.2%;height:1px;z-index:4;display:none;pointer-events:none;
-        background:linear-gradient(90deg,transparent,var(--month-accent,#647b55),transparent);opacity:.22;
-      }
-      .gardenVine::before{content:"❧  ·  ❦  ·  ❧";position:absolute;left:50%;top:-13px;transform:translateX(-50%);white-space:nowrap;
-        color:var(--month-accent,#647b55);font-family:Georgia,serif;font-size:18px;background:var(--month-soft,#f5f7ef);padding:0 10px}
-    `;
-    d.head.appendChild(style);
+  const css=d.createElement('style');
+  css.id='multiMonthStylesV2';
+  css.textContent=`
+   .grid.dynamicMonth{
+     display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;
+     grid-template-rows:repeat(6,minmax(0,1fr))!important;
+     gap:0!important;background:var(--month-paper,#f7f9f2)!important;
+     border:1.25px solid var(--month-line,#9eb092)!important;
+     border-radius:5px!important;overflow:hidden!important;box-sizing:border-box!important;
+   }
+   .dynCell{
+     position:relative!important;display:block!important;width:100%!important;height:100%!important;
+     min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;
+     background:var(--month-paper,#f7f9f2)!important;border:0!important;
+     border-right:1px solid var(--month-line,#a8b79d)!important;
+     border-bottom:1px solid var(--month-line,#a8b79d)!important;
+     border-radius:0!important;outline:0!important;box-shadow:none!important;
+     cursor:pointer!important;overflow:hidden!important;font:inherit!important;color:inherit!important;
+     -webkit-appearance:none!important;appearance:none!important;
+   }
+   .dynCell:nth-child(7n){border-right:0!important}
+   .dynCell:nth-child(n+36){border-bottom:0!important}
+   .dynCell::before,.dynCell::after{display:none!important;content:none!important}
+   .dayLabel{
+     position:absolute;left:9px;top:7px;z-index:8;pointer-events:none;
+     font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
+     font-size:clamp(13px,1.45vw,22px);font-weight:600;line-height:1;
+     color:var(--month-accent,#56704b);
+   }
+   .dayLabel.other{opacity:.32}
+   .badge{
+     left:50%!important;right:auto!important;transform:translateX(-50%)!important;
+     bottom:9px!important;max-width:calc(100% - 14px)!important;
+   }
+   .dynamicMonth .badge{
+     color:var(--month-accent,#56704b)!important;
+     border:1px solid var(--month-line,#a8b79d)!important;
+     background:rgba(255,255,255,.84)!important;
+   }
+   .monthHeaderCover{
+     position:absolute;left:28.3%;top:15.2%;width:39.5%;height:16.2%;z-index:5;
+     display:none;align-items:center;justify-content:center;box-sizing:border-box;
+     padding:0 1.5%;border-radius:30px;pointer-events:none;white-space:nowrap;overflow:hidden;
+     background:linear-gradient(90deg,rgba(250,251,245,.98),var(--month-soft,#eef3e8),rgba(250,251,245,.98));
+     box-shadow:0 6px 24px rgba(62,86,55,.10);
+     font-family:"Bradley Hand","Segoe Print","Comic Sans MS",cursive;
+     color:var(--month-accent,#56704b);font-size:clamp(30px,3.55vw,56px);font-weight:600;line-height:1;
+   }
+   .monthHeaderCover::before,.monthHeaderCover::after{
+     content:"❦";font-family:Georgia,serif;font-size:.42em;opacity:.34;margin:0 .45em;color:var(--month-accent,#56704b)
+   }
+   .monthActiveRing{
+     position:absolute;right:1.55%;width:6.45%;height:6.65%;z-index:7;
+     border:2px solid var(--month-accent,#56704b);border-radius:11px;pointer-events:none;
+     box-shadow:0 0 0 2px rgba(255,255,255,.82) inset;
+   }
+   .gardenAccent{
+     position:absolute;left:31%;top:29.4%;width:34%;height:1px;z-index:6;display:none;pointer-events:none;
+     background:linear-gradient(90deg,transparent,var(--month-accent,#56704b),transparent);opacity:.42;
+   }
+   .gardenAccent::after{
+     content:"❧  ·  ❦  ·  ❧";position:absolute;left:50%;top:-12px;transform:translateX(-50%);
+     white-space:nowrap;color:var(--month-accent,#56704b);font-family:Georgia,serif;font-size:18px;
+     background:var(--month-soft,#eef3e8);padding:0 10px
+   }
+  `;
+  d.head.appendChild(css);
 
-    const title=d.createElement('div'); title.className='monthTitleCover'; stage.appendChild(title);
-    const ring=d.createElement('div'); ring.className='monthActiveRing'; stage.appendChild(ring);
-    const railWash=d.createElement('div'); railWash.className='monthRailWash'; stage.appendChild(railWash);
-    const vine=d.createElement('div'); vine.className='gardenVine'; stage.appendChild(vine);
+  const title=d.createElement('div');title.className='monthHeaderCover';stage.appendChild(title);
+  const ring=d.createElement('div');ring.className='monthActiveRing';stage.appendChild(ring);
+  const accent=d.createElement('div');accent.className='gardenAccent';stage.appendChild(accent);
 
-    const tabTops={7:13.55,8:19.8,9:26.1,10:32.4,11:38.8,0:45.0,1:51.2,2:57.5,3:63.8,4:70.1,5:76.4,6:82.8};
-    const themes={
-      7:{accent:'#315b9f',soft:'#f5f7fb',filter:'none'},
-      8:{accent:'#647b55',soft:'#f2f5e9',filter:'hue-rotate(252deg) saturate(.62) brightness(1.04)'},
-      9:{accent:'#93633f',soft:'#faf2e8',filter:'hue-rotate(150deg) saturate(.66) brightness(1.03)'},
-      10:{accent:'#7b624d',soft:'#f7f0e9',filter:'hue-rotate(155deg) saturate(.48) brightness(1.02)'},
-      11:{accent:'#5b786d',soft:'#edf5f2',filter:'hue-rotate(245deg) saturate(.50) brightness(1.03)'},
-      0:{accent:'#58739b',soft:'#eff4fa',filter:'none'},
-      1:{accent:'#9a6577',soft:'#fbf1f4',filter:'hue-rotate(62deg) saturate(.55) brightness(1.04)'},
-      2:{accent:'#6d8360',soft:'#f1f6ec',filter:'hue-rotate(252deg) saturate(.55) brightness(1.04)'},
-      3:{accent:'#7e6a9b',soft:'#f5f1fa',filter:'hue-rotate(42deg) saturate(.50) brightness(1.04)'},
-      4:{accent:'#6f8a69',soft:'#f0f6ed',filter:'hue-rotate(250deg) saturate(.52) brightness(1.04)'},
-      5:{accent:'#477c7d',soft:'#ecf6f5',filter:'hue-rotate(220deg) saturate(.52) brightness(1.04)'},
-      6:{accent:'#416b91',soft:'#eef5fa',filter:'none'}
-    };
-    let viewYear=2026, viewMonth=7;
+  const tabTops={7:13.55,8:19.8,9:26.1,10:32.4,11:38.8,0:45.0,1:51.2,2:57.5,3:63.8,4:70.1,5:76.4,6:82.8};
+  const themes={
+   7:{accent:'#315b9f',line:'#a9bddc',paper:'#fffdfa',soft:'#f5f7fb',filter:'none'},
+   8:{accent:'#56704b',line:'#a9b99c',paper:'#f8faf3',soft:'#edf3e6',filter:'hue-rotate(245deg) saturate(.58) brightness(1.05)'},
+   9:{accent:'#8a5d3d',line:'#cfb69f',paper:'#fcf8f2',soft:'#f7eee5',filter:'hue-rotate(150deg) saturate(.60) brightness(1.04)'},
+   10:{accent:'#75614d',line:'#c7b9aa',paper:'#fbf8f4',soft:'#f4eee8',filter:'hue-rotate(155deg) saturate(.45) brightness(1.04)'},
+   11:{accent:'#547469',line:'#a7beb5',paper:'#f5faf8',soft:'#eaf3f0',filter:'hue-rotate(235deg) saturate(.52) brightness(1.05)'},
+   0:{accent:'#58739b',line:'#adc0da',paper:'#f6f9fc',soft:'#edf3f9',filter:'none'},
+   1:{accent:'#96677a',line:'#d1b5c0',paper:'#fcf7f9',soft:'#f8edf1',filter:'hue-rotate(62deg) saturate(.52) brightness(1.05)'},
+   2:{accent:'#657d59',line:'#aec0a6',paper:'#f7faf4',soft:'#edf4e9',filter:'hue-rotate(245deg) saturate(.56) brightness(1.05)'},
+   3:{accent:'#796892',line:'#c1b5d1',paper:'#faf7fc',soft:'#f2eef7',filter:'hue-rotate(42deg) saturate(.48) brightness(1.05)'},
+   4:{accent:'#688263',line:'#afc0aa',paper:'#f6faf4',soft:'#ecf3e9',filter:'hue-rotate(245deg) saturate(.52) brightness(1.05)'},
+   5:{accent:'#477879',line:'#a9c5c3',paper:'#f4faf9',soft:'#e9f4f3',filter:'hue-rotate(215deg) saturate(.50) brightness(1.05)'},
+   6:{accent:'#416b91',line:'#abc0d4',paper:'#f5f9fc',soft:'#ebf2f8',filter:'none'}
+  };
+  let viewYear=2026,viewMonth=7;
+  const pad=n=>String(n).padStart(2,'0');
+  const keyFor=(y,m,day)=>`${y}-${pad(m+1)}-${pad(day)}`;
+  const monthName=(y,m)=>new Date(y,m,1).toLocaleDateString(undefined,{month:'long'});
+  const readState=()=>{try{return JSON.parse(w.localStorage.getItem('annaRossPlanner_v1')||'{"events":{}}')}catch(e){return {events:{}}}};
 
-    const pad=n=>String(n).padStart(2,'0');
-    const monthName=(y,m)=>new Date(y,m,1).toLocaleDateString(undefined,{month:'long'});
-    const keyFor=(y,m,day)=>`${y}-${pad(m+1)}-${pad(day)}`;
-    const readState=()=>{try{return JSON.parse(w.localStorage.getItem('annaRossPlanner_v1')||'{"events":{}}')}catch(e){return {events:{}}}};
+  function setTheme(){
+   const isAug=viewYear===2026&&viewMonth===7,t=themes[viewMonth]||themes[7];
+   stage.style.setProperty('--month-accent',t.accent);
+   stage.style.setProperty('--month-line',t.line);
+   stage.style.setProperty('--month-paper',t.paper);
+   stage.style.setProperty('--month-soft',t.soft);
+   if(bg)bg.style.filter=isAug?'none':t.filter;
+   title.style.display=isAug?'none':'flex';
+   title.textContent=isAug?'':`${monthName(viewYear,viewMonth)} ${viewYear}`;
+   accent.style.display=(viewMonth===8)?'block':'none';
+   ring.style.top=(tabTops[viewMonth]??13.55)+'%';
+   ring.style.borderColor=t.accent;
+  }
 
-    function setTheme(){
-      const isAug=viewYear===2026&&viewMonth===7;
-      const t=themes[viewMonth]||themes[7];
-      stage.style.setProperty('--month-accent',t.accent);
-      stage.style.setProperty('--month-soft',t.soft);
-      if(bg) bg.style.filter=isAug?'none':t.filter;
-      title.style.display=isAug?'none':'flex';
-      railWash.style.display=isAug?'none':'block';
-      vine.style.display=(viewMonth===8)?'block':'none';
-      if(!isAug) title.childNodes.length;
-      title.textContent=isAug?'':`${monthName(viewYear,viewMonth)} ${viewYear}`;
-      ring.style.top=(tabTops[viewMonth]??13.55)+'%';
-      ring.style.borderColor=t.accent;
-    }
+  function polishBadges(){
+   d.querySelectorAll('.badge').forEach(b=>Object.assign(b.style,{left:'50%',right:'auto',transform:'translateX(-50%)',bottom:'9px',maxWidth:'calc(100% - 14px)'}));
+  }
 
-    function polishBadges(){
-      d.querySelectorAll('.badge').forEach(b=>Object.assign(b.style,{left:'50%',right:'auto',transform:'translateX(-50%)',bottom:'10px',maxWidth:'calc(100% - 14px)'}));
-    }
+  function buildMonth(){
+   const isAug=viewYear===2026&&viewMonth===7;
+   setTheme();
+   if(isAug){
+     g.classList.remove('dynamicMonth');
+     if(typeof w.buildGridOriginal==='function')w.buildGridOriginal();
+     else if(typeof w.__legacyBuildGrid==='function')w.__legacyBuildGrid();
+     else renderDynamic(true);
+     setTimeout(polishBadges,0);
+     return;
+   }
+   renderDynamic(false);
+  }
 
-    function buildMonth(){
-      setTheme();
-      g.innerHTML='';
-      const S=readState();
-      const first=new Date(viewYear,viewMonth,1).getDay();
-      const days=new Date(viewYear,viewMonth+1,0).getDate();
-      const prevDays=new Date(viewYear,viewMonth,0).getDate();
-      const isAug=viewYear===2026&&viewMonth===7;
+  function renderDynamic(augFallback){
+   g.classList.toggle('dynamicMonth',!augFallback);
+   g.innerHTML='';
+   const S=readState();
+   const first=new Date(viewYear,viewMonth,1).getDay();
+   const days=new Date(viewYear,viewMonth+1,0).getDate();
+   const prevDays=new Date(viewYear,viewMonth,0).getDate();
+   for(let i=0;i<42;i++){
+    const raw=i-first+1;let cy=viewYear,cm=viewMonth,cd=raw,other=false;
+    if(raw<1){other=true;cm--;if(cm<0){cm=11;cy--}cd=prevDays+raw}
+    else if(raw>days){other=true;cm++;if(cm>11){cm=0;cy++}cd=raw-days}
+    const k=keyFor(cy,cm,cd);
+    const b=d.createElement('button');b.type='button';b.className='dynCell';
+    const lab=d.createElement('span');lab.className='dayLabel'+(other?' other':'');lab.textContent=cd;b.appendChild(lab);
+    const evs=(S.events&&S.events[k])||[];
+    if(!other&&evs.length){const s=d.createElement('div');s.className='badge';s.textContent=evs[0].text+(evs.length>1?' +'+(evs.length-1):'');b.appendChild(s)}
+    b.onclick=()=>{if(other){viewYear=cy;viewMonth=cm;buildMonth()}else if(typeof w.openDate==='function')w.openDate(k)};
+    b.setAttribute('aria-label',`${monthName(cy,cm)} ${cd}, ${cy}`);
+    g.appendChild(b);
+   }
+   setTimeout(polishBadges,0);
+  }
 
-      for(let i=0;i<42;i++){
-        const day=i-first+1;
-        let cy=viewYear,cm=viewMonth,cd=day,other=false;
-        if(day<1){other=true;cm--;if(cm<0){cm=11;cy--}cd=prevDays+day}
-        else if(day>days){other=true;cm++;if(cm>11){cm=0;cy++}cd=day-days}
-        const k=keyFor(cy,cm,cd);
-        const b=d.createElement('button');
-        b.type='button';
-        b.className=isAug?'cell':'dynCell';
+  // Keep a reference to the legacy August renderer before replacing its refresh hook.
+  if(typeof w.buildGrid==='function')w.buildGridOriginal=w.buildGrid.bind(w);
+  w.buildGrid=buildMonth;
 
-        if(!isAug){
-          const lab=d.createElement('span');
-          lab.className='dayLabel'+(other?' other':'');
-          lab.textContent=cd;
-          b.appendChild(lab);
-        }
+  const goMonth=m=>{viewMonth=m;viewYear=(m>=7?2026:2027);d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));const ov=d.getElementById('overlay');if(ov)ov.classList.remove('show');buildMonth()};
+  d.querySelectorAll('[data-month]').forEach(b=>{b.onclick=e=>{e.preventDefault();e.stopPropagation();goMonth(Number(b.dataset.month))}});
+  [['.aug',7],['.sep',8],['.oct',9],['.nov',10],['.dec',11],['.jan',0],['.feb',1],['.mar',2],['.apr',3],['.may',4],['.jun',5],['.jul',6]].forEach(([sel,m])=>d.querySelectorAll(sel).forEach(b=>{b.onclick=e=>{e.preventDefault();e.stopPropagation();goMonth(m)}}));
 
-        if(!other){
-          const evs=(S.events&&S.events[k])||[];
-          if(evs.length){const s=d.createElement('div');s.className='badge';s.textContent=evs[0].text+(evs.length>1?' +'+(evs.length-1):'');b.appendChild(s)}
-          b.onclick=()=>w.openDate(k);
-          b.setAttribute('aria-label',`${monthName(viewYear,viewMonth)} ${cd}, ${viewYear}`);
-        }else{
-          b.onclick=()=>{viewYear=cy;viewMonth=cm;buildMonth()};
-        }
-        g.appendChild(b);
-      }
-      setTimeout(polishBadges,0);
-    }
+  // Today/week continue to read the same saved event data.
+  w.renderToday=()=>{
+   const now=new Date();let y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
+   if(!((y===2026&&m>=7)||(y===2027&&m<=6))){y=viewYear;m=viewMonth;day=1}
+   const k=keyFor(y,m,day),box=d.getElementById('todayList'),S=readState();if(!box)return;
+   box.innerHTML='';(S.events[k]||[]).forEach(e=>{const x=d.createElement('div');x.className='item';x.textContent=e.type+': '+e.text;box.appendChild(x)});
+   if(!(S.events[k]||[]).length)box.textContent='Nothing added yet.';
+   const p=d.getElementById('priorities');if(p)p.value=S.priorities||'';
+  };
+  w.renderWeek=()=>{
+   const S=readState(),out=d.getElementById('weekGrid');if(!out)return;out.innerHTML='';
+   const anchor=Math.min(14,new Date(viewYear,viewMonth+1,0).getDate()),dt=new Date(viewYear,viewMonth,anchor);dt.setDate(dt.getDate()-dt.getDay());
+   ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach((name,idx)=>{const cur=new Date(dt);cur.setDate(dt.getDate()+idx);const box=d.createElement('div');box.className='weekday';const h=d.createElement('h3');h.textContent=name+' '+cur.getDate();box.appendChild(h);const k=keyFor(cur.getFullYear(),cur.getMonth(),cur.getDate());(S.events[k]||[]).forEach(e=>{const p=d.createElement('div');p.textContent='• '+e.text;box.appendChild(p)});out.appendChild(box)});
+  };
 
-    // Expose the new builder so save/delete/check actions refresh the month being viewed.
-    w.buildGrid=buildMonth;
-
-    // Aug 2026 through Jul 2027 — every visible month tab is now a real calendar.
-    d.querySelectorAll('[data-month]').forEach(b=>{
-      b.onclick=(e)=>{
-        e.preventDefault();e.stopPropagation();
-        const m=Number(b.dataset.month);
-        viewMonth=m;viewYear=(m>=7?2026:2027);
-        d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
-        const ov=d.getElementById('overlay');if(ov)ov.classList.remove('show');
-        buildMonth();
-      };
-    });
-
-    // Make any legacy month hotspots follow their class name if data-month is absent.
-    const monthClasses=[['.aug',7],['.sep',8],['.oct',9],['.nov',10],['.dec',11],['.jan',0],['.feb',1],['.mar',2],['.apr',3],['.may',4],['.jun',5],['.jul',6]];
-    monthClasses.forEach(([sel,m])=>d.querySelectorAll(sel).forEach(b=>{
-      b.onclick=(e)=>{e.preventDefault();e.stopPropagation();viewMonth=m;viewYear=(m>=7?2026:2027);buildMonth()};
-    }));
-
-    w.renderToday=()=>{
-      const now=new Date();let y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
-      const inCycle=(y===2026&&m>=7)||(y===2027&&m<=6);if(!inCycle){y=viewYear;m=viewMonth;day=1}
-      const k=keyFor(y,m,day),box=d.getElementById('todayList'),S=readState();if(!box)return;
-      box.innerHTML='';(S.events[k]||[]).forEach(e=>{const x=d.createElement('div');x.className='item';x.textContent=e.type+': '+e.text;box.appendChild(x)});
-      if(!(S.events[k]||[]).length)box.textContent='Nothing added yet.';
-      const p=d.getElementById('priorities');if(p)p.value=S.priorities||'';
-    };
-
-    w.renderWeek=()=>{
-      const S=readState(),out=d.getElementById('weekGrid');if(!out)return;out.innerHTML='';
-      const anchor=Math.min(14,new Date(viewYear,viewMonth+1,0).getDate());const dt=new Date(viewYear,viewMonth,anchor);dt.setDate(dt.getDate()-dt.getDay());
-      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach((name,idx)=>{const cur=new Date(dt);cur.setDate(dt.getDate()+idx);const box=d.createElement('div');box.className='weekday';const h=d.createElement('h3');h.textContent=name+' '+cur.getDate();box.appendChild(h);const k=keyFor(cur.getFullYear(),cur.getMonth(),cur.getDate());(S.events[k]||[]).forEach(e=>{const p=d.createElement('div');p.textContent='• '+e.text;box.appendChild(p)});out.appendChild(box)});
-    };
-
-    buildMonth();
-  }catch(e){console.error(e)}
+  // Start on August exactly as the existing planner does.
+  setTheme();
+  setTimeout(polishBadges,0);
+ }catch(e){console.error(e)}
 });
 </script>
 </body>
