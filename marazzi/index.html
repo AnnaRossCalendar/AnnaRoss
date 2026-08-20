@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Marazzi Board Order</title>
+<style>
+:root {
+  --navy:#1f3f70;
+  --navy2:#274a7d;
+  --gray:#777b80;
+  --line:#8e8e8e;
+  --paper:#ffffff;
+  --yellow:#fff200;
+  --tap:#e8f2ff;
+  --green:#e7f6e9;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#eef1f5;font-family:Arial,Helvetica,sans-serif;color:#111}
+.app{max-width:980px;margin:0 auto;background:var(--paper);min-height:100vh;padding-bottom:90px}
+.topbar{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid #ddd;padding:10px 12px;display:flex;gap:8px;align-items:center}
+.topbar input{flex:1;font-size:18px;padding:12px 14px;border:1px solid #aaa;border-radius:10px}
+button{font:inherit;border:0;border-radius:10px;padding:12px 14px;font-weight:700}
+.primary{background:var(--navy);color:#fff}
+.secondary{background:#e9edf2;color:#142338}
+.danger{background:#f6e8e8;color:#8a1f1f}
+.sheet{padding:10px 12px}
+.title{font-size:26px;font-weight:800;margin:5px 0 4px}
+.notice{background:var(--yellow);font-weight:800;padding:5px 7px;display:inline-block;margin-bottom:8px}
+.customer-grid{display:grid;grid-template-columns:165px 1fr;border:1px solid var(--line);border-bottom:0}
+.customer-grid label,.customer-grid input,.customer-grid textarea{border:0;border-bottom:1px solid var(--line);min-height:42px;padding:9px;font-size:17px}
+.customer-grid label{font-weight:800;background:#fff;border-right:1px solid var(--line)}
+.customer-grid input,.customer-grid textarea{background:#fffaf0;width:100%;resize:none}
+.table-head,.board-row{display:grid;grid-template-columns:185px 1fr 70px 88px;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.table-head{background:#7d7f82;color:#fff;font-size:18px;font-weight:800;border-top:1px solid var(--line)}
+.table-head div,.board-row>div{padding:8px;border-right:1px solid var(--line)}
+.table-head div:last-child,.board-row>div:last-child{border-right:0}
+.category{background:var(--navy);color:#fff;font-size:20px;font-weight:800;padding:7px 8px;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.board-row{font-size:16px;align-items:stretch;cursor:pointer;background:#fff}
+.board-row.selected{background:var(--green)}
+.board-row.new-style{background:#fffbd5}
+.board-row.selected.new-style{background:#e9f4c9}
+.board-row .part{font-weight:700}
+.board-row .list{text-align:center}
+.qtybox{display:flex;align-items:center;justify-content:center;gap:6px;padding:4px!important}
+.qty{min-width:34px;text-align:center;font-size:19px;font-weight:800}
+.qbtn{width:31px;height:31px;padding:0;border-radius:7px;background:#dfe8f3;color:#17365f;font-size:20px;line-height:31px}
+.search-note{font-size:13px;color:#666;margin:6px 2px 12px}
+.bottom-actions{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid #ccc;padding:9px;display:flex;gap:8px;justify-content:center;z-index:40}
+.bottom-actions button{min-width:150px}
+.summary-only .topbar,.summary-only .bottom-actions,.summary-only .search-note,.summary-only .qbtn{display:none!important}
+.summary-only .app{padding-bottom:10px}
+.summary-only .board-row:not(.selected){display:none}
+.summary-only .qtybox{font-size:18px}
+.summary-only .qty{display:block}
+.summary-only .customer-grid input,.summary-only .customer-grid textarea{background:#fff}
+.summary-banner{display:none;background:#f1f4f8;border:1px solid #bac4cf;padding:9px;margin:8px 0;font-weight:700}
+.summary-only .summary-banner{display:block}
+.email-settings{display:none;margin:10px 0;padding:12px;border:1px solid #bbb;border-radius:10px;background:#f7f8fa}
+.email-settings.open{display:block}
+.email-settings input{width:100%;font-size:17px;padding:10px;border:1px solid #aaa;border-radius:8px;margin:6px 0}
+.footer{font-size:11px;color:#555;margin-top:8px;line-height:1.35}
+@media(max-width:760px){
+  .title{font-size:22px}
+  .customer-grid{grid-template-columns:125px 1fr}
+  .table-head,.board-row{grid-template-columns:145px 1fr 45px 80px;font-size:14px}
+  .table-head{font-size:15px}
+  .category{font-size:17px}
+  .qbtn{width:28px;height:28px}
+}
+@media print{
+  body{background:#fff}
+  .topbar,.bottom-actions,.search-note,.email-settings{display:none!important}
+  .app{max-width:none;padding:0}
+  .board-row:not(.selected){display:none}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <input id="search" type="search" placeholder="Search board or part #">
+    <button class="secondary" onclick="toggleSettings()">Email</button>
+  </div>
+
+  <div class="sheet">
+    <div class="title">Merchandising Support Materials</div>
+    <div class="notice">NEW STYLES HIGHLIGHTED IN YELLOW</div>
+
+    <div class="customer-grid">
+      <label>CUSTOMER NAME:</label><input id="customer" autocomplete="off">
+      <label>Account #</label><input id="account" autocomplete="off">
+      <label>Ship To Address</label><textarea id="address" rows="2"></textarea>
+    </div>
+
+    <div class="email-settings" id="settings">
+      <b>Display Department Email</b>
+      <input id="displayEmail" type="email" placeholder="displaydepartment@company.com">
+      <button class="primary" onclick="saveEmail()">Save Email</button>
+    </div>
+
+    <div class="summary-banner">ORDER REQUEST — selected Marazzi sample boards only</div>
+    <div class="search-note">Tap a board row to add 1. Use + / − if you need a different quantity.</div>
+
+    <div class="table-head">
+      <div>PART #</div><div>DESCRIPTION</div><div>LIST</div><div>QTY</div>
+    </div>
+    <div class="category">BLANK SAMPLE BOARD</div>
+    <div id="blankBoard"></div>
+    <div class="category">ILLUSTRATED SAMPLE BOARDS</div>
+    <div id="boardList"></div>
+
+    <div class="footer">
+      Copyright Marazzi: October 2023<br>
+      This issue cancels and replaces any previous publications.<br>
+      We reserve the right to make changes any time, without notice, in colors, materials, packaging, specifications and availability.
+    </div>
+  </div>
+</div>
+
+<div class="bottom-actions">
+  <button class="danger" onclick="newAccount()">New Account</button>
+  <button class="primary" id="viewBtn" onclick="toggleOrderView()">Create Order View</button>
+  <button class="secondary" onclick="emailOrder()">Email</button>
+</div>
+
+<script>
+const boards = [{"part":"0000MZISB000","desc":"Blank Marazzi Logo Board","list":"6","new":false},{"part":"0000MZISB262","desc":"Alterations™","list":"20","new":false},{"part":"0000MZISB269","desc":"American Estates™ (Natural/ Saddle/ Spice)","list":"20","new":false},{"part":"0000MZISB268","desc":"American Estates™ (Sand/Suede/Pebble)","list":"20","new":false},{"part":"0000MZISB208","desc":"Artezen™","list":"20","new":false},{"part":"0000MZISB226","desc":"Artistic Reflections 1 of 2","list":"20","new":false},{"part":"0000MZISB227","desc":"Artistic Reflections 2 of 2","list":"20","new":false},{"part":"0000MZISB242","desc":"Block","list":"20","new":false},{"part":"0000MZISB244","desc":"Chateau Reserve (consolidated board)","list":"20","new":false},{"part":"0000MZISB257","desc":"Classentino Marble™","list":"20","new":false},{"part":"0000MZISB258","desc":"Classentino Marble™","list":"20","new":false},{"part":"0000MZISB274","desc":"Constellaire","list":"20","new":true},{"part":"0000MZISB213","desc":"Costa Clara™","list":"20","new":false},{"part":"0000MZISB252","desc":"COTTO REVIVAL 1OF3","list":"20","new":false},{"part":"0000MZISB253","desc":"COTTO REVIVAL 2OF3","list":"20","new":false},{"part":"0000MZISB254","desc":"COTTO REVIVAL 3OF3","list":"20","new":false},{"part":"0000MZISB266","desc":"Crafthouse","list":"20","new":false},{"part":"0000MZISB223","desc":"Creativo 1 of 2","list":"20","new":false},{"part":"0000MZISB224","desc":"Creativo 2 of 2","list":"20","new":false},{"part":"0000MZISB265","desc":"Curation","list":"20","new":false},{"part":"0000MZISB196","desc":"D_Segni Color™","list":"20","new":false},{"part":"0000MZISB197","desc":"D_Segni Terrazzo™","list":"20","new":false},{"part":"0000MZISB181","desc":"D_Segni™","list":"20","new":false},{"part":"0000MZISB167","desc":"Edgewood™","list":"20","new":false},{"part":"0000MZISB275","desc":"Editorial 1 of 2","list":"20","new":true},{"part":"0000MZISB276","desc":"Editorial 2 of 2","list":"20","new":true},{"part":"0000MZISB256","desc":"FORGEHAUS","list":"20","new":false},{"part":"0000MZISB246","desc":"Historia™","list":"20","new":false},{"part":"0000MZISB239","desc":"Illusionist 1","list":"20","new":false},{"part":"0000MZISB240","desc":"Illusionist 2","list":"20","new":false},{"part":"0000MZISB241","desc":"Inyo","list":"20","new":false},{"part":"0000MZISB222","desc":"Knoxwood™","list":"20","new":false},{"part":"0000MZISB126","desc":"Lounge14™ (Cosmo/Sidecar/Spritzer/Martini)","list":"20","new":false},{"part":"0000MZISB125","desc":"Lounge14™ (Cosmo/Sidecar/Spritzer/Martini) Deco Inlay","list":"20","new":false},{"part":"0000MZISB215","desc":"Marble Obsession Floor™","list":"20","new":false},{"part":"0000MZISB216","desc":"Marble Obsession Wall™","list":"20","new":false},{"part":"0000MZISB161","desc":"Materika™","list":"20","new":false},{"part":"0000MZISB199","desc":"Merona™","list":"20","new":false},{"part":"0000MZISB259","desc":"Middleton Square™","list":"20","new":false},{"part":"0000MZISB214","desc":"Midpark Mosaics™","list":"20","new":false},{"part":"0000MZISB248","desc":"Modern Formation™ (Light Polished/Unpolished)","list":"20","new":false},{"part":"0000MZISB250","desc":"Modern Formation™ (Textured)","list":"20","new":false},{"part":"0000MZISB260","desc":"Modern Oasis™","list":"20","new":false},{"part":"0000MZISB261","desc":"Moroccan Concrete™","list":"20","new":false},{"part":"0000MZISB193","desc":"Persuade™  (Floor)","list":"20","new":false},{"part":"0000MZISB243","desc":"RHYME & REASON 1OF2","list":"20","new":false},{"part":"0000MZISB251","desc":"RHYME AND REASON 2OF2","list":"20","new":false},{"part":"0000MZISB230","desc":"Rice Bianco & Grigio","list":"20","new":false},{"part":"0000MZISB231","desc":"Rice Blu","list":"20","new":false},{"part":"0000MZISB229","desc":"Rice Natural","list":"20","new":false},{"part":"0000MZISB234","desc":"Savoir","list":"20","new":false},{"part":"0000MZISB235","desc":"Savoir Mosaics","list":"20","new":false},{"part":"0000MZISB225","desc":"Scenario™","list":"20","new":false},{"part":"0000MZISB267","desc":"TERRAMATER","list":"20","new":false},{"part":"0000MZISB217","desc":"Treverksoul™","list":"20","new":false},{"part":"0000MZISB236","desc":"Uniche","list":"20","new":false},{"part":"0000MZISB237","desc":"Uniche Beige","list":"20","new":false},{"part":"0000MZISB220","desc":"Urban District BRX™ (Eastside/Industrial/Midtown)","list":"20","new":false},{"part":"0000MZISB233","desc":"Vero Castagno 4x21","list":"20","new":false},{"part":"0000MZISB228","desc":"Vero Natural & Castagno","list":"20","new":false},{"part":"0000MZISB232","desc":"Vero Rovere & Quercia","list":"20","new":false},{"part":"0000MZISB255","desc":"ZELLIGE NEO","list":"20","new":false},{"part":"0000MZISB238","desc":"ZELLIGE NEO ISB","list":"20","new":false}];
+const qty = {};
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+function rowHtml(b){const q=qty[b.part]||0;return `<div class="board-row ${q?'selected':''} ${b.new?'new-style':''}" data-part="${esc(b.part)}" data-search="${esc((b.part+' '+b.desc).toLowerCase())}" onclick="rowTap(event,'${esc(b.part)}')"><div class="part">${esc(b.part)}</div><div>${esc(b.desc)}</div><div class="list">${esc(b.list)}</div><div class="qtybox"><button class="qbtn" onclick="changeQty(event,'${esc(b.part)}',-1)">−</button><span class="qty">${q||''}</span><button class="qbtn" onclick="changeQty(event,'${esc(b.part)}',1)">+</button></div></div>`;}
+function render(){document.getElementById('blankBoard').innerHTML=rowHtml(boards[0]);document.getElementById('boardList').innerHTML=boards.slice(1).map(rowHtml).join('');applySearch();}
+function rowTap(e,part){if(e.target.closest('button'))return;qty[part]=qty[part]?0:1;render();}
+function changeQty(e,part,delta){e.stopPropagation();qty[part]=Math.max(0,Math.min(9,(qty[part]||0)+delta));render();}
+function applySearch(){const s=(document.getElementById('search').value||'').trim().toLowerCase();document.querySelectorAll('.board-row').forEach(r=>{r.style.display=(!s||r.dataset.search.includes(s))?'':'none';});}
+document.getElementById('search').addEventListener('input',applySearch);
+function toggleOrderView(){const selected=Object.values(qty).some(v=>v>0);if(!selected&&!document.body.classList.contains('summary-only')){alert('Tap at least one board first.');return;}document.body.classList.toggle('summary-only');document.getElementById('viewBtn').textContent=document.body.classList.contains('summary-only')?'Back to Edit':'Create Order View';if(document.body.classList.contains('summary-only'))window.scrollTo(0,0);}
+function newAccount(){if(!confirm('Start a fresh account? This clears the customer and all quantities.'))return;document.getElementById('customer').value='';document.getElementById('account').value='';document.getElementById('address').value='';Object.keys(qty).forEach(k=>delete qty[k]);document.body.classList.remove('summary-only');document.getElementById('viewBtn').textContent='Create Order View';document.getElementById('search').value='';render();window.scrollTo(0,0);}
+function toggleSettings(){document.getElementById('settings').classList.toggle('open');}
+function saveEmail(){const v=document.getElementById('displayEmail').value.trim();localStorage.setItem('marazziDisplayEmail',v);document.getElementById('settings').classList.remove('open');}
+function loadEmail(){document.getElementById('displayEmail').value=localStorage.getItem('marazziDisplayEmail')||'';}
+function emailOrder(){const to=(localStorage.getItem('marazziDisplayEmail')||'').trim();if(!to){document.getElementById('settings').classList.add('open');alert('Enter the Display Department email once, then tap Save Email.');return;}const customer=document.getElementById('customer').value.trim()||'Customer';const account=document.getElementById('account').value.trim();const selected=boards.filter(b=>(qty[b.part]||0)>0);if(!selected.length){alert('Select at least one board first.');return;}const lines=selected.map(b=>`${b.part} — ${b.desc} — QTY ${qty[b.part]}`).join('\n');const subject=`Marazzi Display Board Request - ${customer}${account?' - Acct '+account:''}`;const body=`Please order the attached/requested Marazzi display boards for ${customer}.\n\n${lines}\n\nScreenshot of form attached separately.`;window.location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;}
+loadEmail();render();
+</script>
+</body>
+</html>
