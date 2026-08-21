@@ -176,6 +176,37 @@ f.addEventListener('load',()=>{
   if(typeof w.buildGrid==='function')w.buildGridOriginal=w.buildGrid.bind(w);
   w.buildGrid=buildMonth;
 
+  // Reliable unlimited daily entries on iPad.
+  // Keep the selected date outside the legacy closure so the Add button
+  // continues working after any number of tasks, appointments, or reminders.
+  let selectedDateKey=null;
+  const legacyOpenDate=typeof w.openDate==='function'?w.openDate.bind(w):null;
+  if(legacyOpenDate){
+   w.openDate=k=>{selectedDateKey=k;legacyOpenDate(k)};
+  }
+  const addButton=d.getElementById('saveEvent');
+  const entryInput=d.getElementById('eventText');
+  const typeInput=d.getElementById('eventType');
+  if(addButton&&entryInput&&typeInput){
+   addButton.onclick=e=>{
+    e.preventDefault();
+    const text=entryInput.value.trim();
+    if(!text||!selectedDateKey)return;
+    const S=readState();
+    if(!S.events||typeof S.events!=='object')S.events={};
+    if(!Array.isArray(S.events[selectedDateKey]))S.events[selectedDateKey]=[];
+    S.events[selectedDateKey].push({text,type:typeInput.value,done:false});
+    w.localStorage.setItem('annaRossPlanner_v1',JSON.stringify(S));
+    entryInput.value='';
+    if(typeof w.renderDateItems==='function')w.renderDateItems();
+    buildMonth();
+    entryInput.focus();
+   };
+   entryInput.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();addButton.click()}
+   });
+  }
+
   const goMonth=m=>{viewMonth=m;viewYear=(m>=7?2026:2027);d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));const ov=d.getElementById('overlay');if(ov)ov.classList.remove('show');buildMonth()};
   d.querySelectorAll('[data-month]').forEach(b=>{b.onclick=e=>{e.preventDefault();e.stopPropagation();goMonth(Number(b.dataset.month))}});
   [['.aug',7],['.sep',8],['.oct',9],['.nov',10],['.dec',11],['.jan',0],['.feb',1],['.mar',2],['.apr',3],['.may',4],['.jun',5],['.jul',6]].forEach(([sel,m])=>d.querySelectorAll(sel).forEach(b=>{b.onclick=e=>{e.preventDefault();e.stopPropagation();goMonth(m)}}));
