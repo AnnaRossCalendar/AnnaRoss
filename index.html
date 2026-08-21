@@ -246,6 +246,16 @@ f.addEventListener('load',()=>{
    });
   }
 
+  // Always repaint the month after the day list changes or the pop-up closes.
+  // This also covers the original legacy Add/check/delete handlers.
+  const dayList=d.getElementById('dateItems');
+  if(dayList){
+   const refreshObserver=new MutationObserver(()=>setTimeout(buildMonth,0));
+   refreshObserver.observe(dayList,{childList:true,subtree:true,characterData:true});
+  }
+  const closeDay=d.getElementById('closeOverlay');
+  if(closeDay)closeDay.addEventListener('click',()=>setTimeout(buildMonth,0));
+
   const goMonth=m=>{viewMonth=m;viewYear=(m>=7?2026:2027);d.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));const ov=d.getElementById('overlay');if(ov)ov.classList.remove('show');buildMonth()};
   d.querySelectorAll('[data-month]').forEach(b=>{b.onclick=e=>{e.preventDefault();e.stopPropagation();goMonth(Number(b.dataset.month))}});
   [['.aug',7],['.sep',8],['.oct',9],['.nov',10],['.dec',11],['.jan',0],['.feb',1],['.mar',2],['.apr',3],['.may',4],['.jun',5],['.jul',6]].forEach(([sel,m])=>d.querySelectorAll(sel).forEach(b=>{b.onclick=e=>{e.preventDefault();e.stopPropagation();goMonth(m)}}));
