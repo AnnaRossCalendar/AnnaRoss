@@ -63,6 +63,16 @@ f.addEventListener('load',()=>{
      border:1px solid var(--month-line,#a8b79d)!important;
      background:rgba(255,255,255,.84)!important;
    }
+   .badge.multiEntry{
+     top:31px!important;bottom:auto!important;max-height:calc(100% - 36px)!important;
+     white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;
+     padding:3px 5px!important;pointer-events:none!important;
+   }
+   .badgeLine{
+     display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;
+     white-space:nowrap!important;font-size:clamp(8px,.82vw,13px)!important;line-height:1.25!important;
+   }
+   .badgeMore{font-weight:700!important;opacity:.75!important}
    .monthHeaderCover{
      position:absolute;left:28.3%;top:15.2%;width:39.5%;height:16.2%;z-index:5;
      display:none;align-items:center;justify-content:center;box-sizing:border-box;
@@ -132,7 +142,28 @@ f.addEventListener('load',()=>{
   }
 
   function polishBadges(){
-   d.querySelectorAll('.badge').forEach(b=>Object.assign(b.style,{left:'50%',right:'auto',transform:'translateX(-50%)',bottom:'9px',maxWidth:'calc(100% - 14px)'}));
+   const S=readState();
+   const first=new Date(viewYear,viewMonth,1).getDay();
+   const days=new Date(viewYear,viewMonth+1,0).getDate();
+   Array.from(g.children).forEach((cell,i)=>{
+    const day=i-first+1;
+    if(day<1||day>days)return;
+    const evs=(S.events&&S.events[keyFor(viewYear,viewMonth,day)])||[];
+    let badge=cell.querySelector('.badge');
+    if(!evs.length){if(badge)badge.remove();return}
+    if(!badge){badge=d.createElement('div');badge.className='badge';cell.appendChild(badge)}
+    badge.classList.add('multiEntry');
+    badge.innerHTML='';
+    evs.slice(0,4).forEach(e=>{
+     const line=d.createElement('span');line.className='badgeLine';
+     line.textContent=(e.done?'✓ ':'')+e.text;badge.appendChild(line);
+    });
+    if(evs.length>4){
+     const more=d.createElement('span');more.className='badgeLine badgeMore';
+     more.textContent='+'+(evs.length-4)+' more';badge.appendChild(more);
+    }
+    Object.assign(badge.style,{left:'50%',right:'auto',transform:'translateX(-50%)',maxWidth:'calc(100% - 14px)'});
+   });
   }
 
   function buildMonth(){
@@ -191,6 +222,14 @@ f.addEventListener('load',()=>{
    addButton.onclick=e=>{
     e.preventDefault();
     const text=entryInput.value.trim();
+    if(!selectedDateKey){
+     const label=(d.getElementById('dateTitle')?.textContent||'').trim();
+     const match=label.match(/([A-Za-z]+)\s+(\d{1,2})$/);
+     if(match){
+      const monthIndex=new Date(match[1]+' 1, 2000').getMonth();
+      if(!Number.isNaN(monthIndex))selectedDateKey=keyFor(viewYear,monthIndex,Number(match[2]));
+     }
+    }
     if(!text||!selectedDateKey)return;
     const S=readState();
     if(!S.events||typeof S.events!=='object')S.events={};
