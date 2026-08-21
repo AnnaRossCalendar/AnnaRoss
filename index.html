@@ -64,7 +64,7 @@ f.addEventListener('load',()=>{
      background:rgba(255,255,255,.84)!important;
    }
    .badge.atGlance{white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;padding:3px 5px!important;max-height:calc(100% - 28px)!important}
-   .atGlanceLine{display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:clamp(8px,.82vw,13px)!important;line-height:1.25!important;text-align:left!important}
+   .atGlanceLine{display:block!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;font-size:clamp(8px,.72vw,12px)!important;line-height:1.08!important;text-align:left!important;margin-bottom:2px!important}
    .monthHeaderCover{
      position:absolute;left:28.3%;top:15.2%;width:39.5%;height:16.2%;z-index:5;
      display:none;align-items:center;justify-content:center;box-sizing:border-box;
@@ -154,7 +154,7 @@ f.addEventListener('load',()=>{
      const more=d.createElement('span');more.className='atGlanceLine';
      more.textContent='+'+(evs.length-4)+' more';badge.appendChild(more);
     }
-    Object.assign(badge.style,{left:'50%',right:'auto',transform:'translateX(-50%)',bottom:'6px',maxWidth:'calc(100% - 14px)'});
+    Object.assign(badge.style,{left:'50%',right:'auto',transform:'translateX(-50%)',bottom:'4px',width:'calc(100% - 14px)',maxWidth:'calc(100% - 14px)'});
    });
   }
 
