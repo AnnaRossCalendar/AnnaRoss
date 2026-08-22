@@ -224,6 +224,9 @@ f.addEventListener('load',()=>{
   // Start on August exactly as the existing planner does.
   setTheme();
   setTimeout(polishBadges,0);
+
+  // Keep the month view synchronized with items added, checked, or removed in the date popup.
+  w.setInterval(polishBadges,500);
  }catch(e){console.error(e)}
 });
 </script>
